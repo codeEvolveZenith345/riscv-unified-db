@@ -1,0 +1,188 @@
+parameters:
+  - name: "NUM_PMP_ENTRIES"
+    description: |
+      Defines the number of implemented Physical Memory Protection (PMP) entries.
+      This parameter controls the hardware resources available for memory protection.
+      The number of implemented PMP registers (pmpaddrN and pmpcfgN) is derived
+      from this value.
+    
+    type: "integer"
+    
+    constraints:
+      - type: "range"
+        value: "0-64"
+        description: "Can be any value between 0 and 64, inclusive."
+      - type: "hardware_dependency"
+        value: "0, 16, 64"
+        description: |
+          The number of implemented PMP registers must be 0, 16, or 64.
+          If NUM_PMP_ENTRIES is not exactly 0, 16, or 64, some extant pmp registers
+          will be read-only zero.
+    
+    default_value: null
+    
+    scope: "system"
+    
+    implementation_freedom: "implementation_specific"
+    
+    discoverability:
+      method: "csr_detection"
+      mechanism: "Software can detect implemented PMP entries by writing to pmpaddr CSRs and reading back the value."
+    
+    specification_reference:
+      document: "riscv-unified-db/cfgs/example_rv64_with_overlay.yaml"
+      section: "params"
+      exact_quote: |
+        "number of implemented PMP entries. Can be any value between 0-64, inclusive.
+        the number of implemented PMP registers must be 0, 16, or 64."
+    
+    notes: |
+      The configuration file notes that pmpcfgN for an odd N never exist when XLEN == 64.
+    
+    validation_status: "verified"
+
+  - name: "PMP_GRANULARITY"
+    description: |
+      Log2 of the smallest supported PMP region size. This defines the minimum
+      alignment and size for PMP regions.
+    
+    type: "integer"
+    
+    constraints:
+      - type: "recommendation"
+        value: ">= 12"
+        description: |
+          For systems with an MMU, should not be smaller than 12 to allow caching
+          PMP results in the TLB.
+      - type: "formula"
+        value: "G+2"
+        description: "PMP_GRANULARITY is equal to G+2 as described in the privileged architecture."
+    
+    default_value: null
+    
+    scope: "system"
+    
+    implementation_freedom: "implementation_specific"
+    
+    discoverability:
+      method: "csr_detection"
+      mechanism: "Software can discover granularity by writing all ones to a pmpaddr register and observing the alignment of the result."
+    
+    specification_reference:
+      document: "riscv-unified-db/cfgs/example_rv64_with_overlay.yaml"
+      section: "params"
+      exact_quote: |
+        "log2 of the smallest supported PMP region. generally, for systems with an MMU,
+        should not be smaller than 12... Note that PMP_GRANULARITY is equal to G+2"
+    
+    notes: |
+      This parameter directly impacts the granularity of memory protection and
+      interaction with virtual memory systems.
+    
+    validation_status: "verified"
+
+  - name: "MISALIGNED_LDST"
+    description: |
+      Indicates whether the implementation supports misaligned loads and stores
+      in main memory (excluding atomics).
+    
+    type: "boolean"
+    
+    constraints:
+      - type: "dependency"
+        value: "Zicclsm"
+        description: "Must be true when the Zicclsm extension is supported."
+    
+    default_value: null
+    
+    scope: "system"
+    
+    implementation_freedom: "optional"
+    
+    discoverability:
+      method: "execution_test"
+      mechanism: "Software can attempt a misaligned load/store and check for a trap."
+    
+    specification_reference:
+      document: "riscv-unified-db/cfgs/example_rv64_with_overlay.yaml"
+      section: "params"
+      exact_quote: |
+        "whether or not the implementation supports misaligned loads and stores in main memory
+        (not including atomics). must be true when Zicclsm is supported"
+    
+    notes: |
+      This parameter distinguishes between hardware that handles misalignment
+      transparently and hardware that traps to software.
+    
+    validation_status: "verified"
+
+  - name: "M_MODE_ENDIANNESS"
+    description: |
+      Defines the endianness of data access in Machine (M) mode.
+    
+    type: "enum"
+    
+    constraints:
+      - type: "enumeration"
+        value: "little, big, dynamic"
+        description: |
+          'little': Always little endian.
+          'big': Always big endian.
+          'dynamic': Dependent on mstatus.MBE.
+    
+    default_value: null
+    
+    scope: "privilege_level"
+    
+    implementation_freedom: "implementation_specific"
+    
+    discoverability:
+      method: "csr_read"
+      mechanism: "Check mstatus.MBE if dynamic, or rely on fixed platform specification."
+    
+    specification_reference:
+      document: "riscv-unified-db/cfgs/example_rv64_with_overlay.yaml"
+      section: "params"
+      exact_quote: |
+        "Endianness of data in M-mode. Can be one of:
+         * little:  M-mode data is always little endian
+         * big:     M-mode data is always big endian
+         * dynamic: M-mode data can be either little or big endian, depending on the RW CSR field mstatus.MBE"
+    
+    notes: |
+      Similar parameters exist for S-mode (S_MODE_ENDIANNESS), U-mode (U_MODE_ENDIANNESS),
+      and VS-mode (VS_MODE_ENDIANNESS).
+    
+    validation_status: "verified"
+
+  - name: "CACHE_BLOCK_SIZE"
+    description: |
+      The size of a cache block in bytes.
+    
+    type: "integer"
+    
+    constraints:
+      - type: "alignment"
+        value: "power_of_two"
+        description: "Implied by standard cache architecture definitions."
+    
+    default_value: null
+    
+    scope: "system"
+    
+    implementation_freedom: "implementation_specific"
+    
+    discoverability:
+      method: "execution_environment_interface"
+      mechanism: "CMO extensions or other discovery mechanisms."
+    
+    specification_reference:
+      document: "riscv-unified-db/cfgs/example_rv64_with_overlay.yaml"
+      section: "params"
+      exact_quote: |
+        "size of a cache block, in bytes"
+    
+    notes: |
+      Matches the "SNIPPET 1" example provided in the prompt context.
+    
+    validation_status: "verified"
