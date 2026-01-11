@@ -1,5 +1,7 @@
 ## CORRECTION: Source File Analysis
 
+> **What I Learned:** There's a huge difference between files that *define* what can vary (`arch/` directory with specification text) and files that *choose* what was selected for one specific chip (`cfgs/` directory with configuration values). I initially analyzed the wrong set. This document explains the distinction and what I *would* analyze with full repository access.
+
 ### Files Actually Analyzed (WRONG):
 - ❌ `cfgs/example_rv64_with_overlay.yaml` - This is a CONFIGURATION OUTPUT
 

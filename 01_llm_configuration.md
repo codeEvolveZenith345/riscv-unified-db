@@ -1,5 +1,7 @@
 # LLM Configuration Details
 
+> **Why This Matters:** I used Gemini 1.5 Pro because it could hold 2 million tokens in memory—enough to read multiple specification sections at once. But the prompts I developed work with any LLM (even open-source ones like Llama). Think of this file as "here's what I used, here's why, and here's how you can reproduce it with different tools."
+
 ## Primary LLM Used
 
 ### Model Information

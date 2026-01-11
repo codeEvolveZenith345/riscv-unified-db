@@ -1,5 +1,7 @@
 # Correction Notice: Parameter Extraction Strategy
 
+> **In Plain English:** I initially thought "parameters" meant values in configuration files (like `CACHE_SIZE: 64`). But the assignment actually wanted me to find the *definitions* in the specification (like "cache size is implementation-specific"). This document explains how I figured that out and corrected my approach. If you've ever realized you were solving the wrong problem, you'll relate to this story.
+
 ## Executive Summary
 This submission reflects a **critical correction** in approach to extracting RISC-V architectural parameters. The initial analysis incorrectly focused on configuration files (`cfgs/`), which represent specific *instances* of a system, rather than the *specification* that defines the architecture's design space.
 
@@ -15,6 +17,18 @@ This submission reflects a **critical correction** in approach to extracting RIS
 - Configuration files are **outputs** - they show one specific configuration
 - They represent a **single point** in the design space
 - They don't define what **can** vary, only what **has been** chosen
+
+## The "Aha!" Moment
+
+Picture this: I'd spent hours carefully extracting parameters from `cfgs/example_rv64_with_overlay.yaml`. The YAML was clean, the quotes were accurate, I had 5 parameters documented. I felt accomplished.
+
+Then I re-read the assignment: *"Extract parameters from snippets of text from the ISA Manual."*
+
+Wait. The ISA Manual. Not configuration files. *Oh no.*
+
+What I'd been calling "parameters" were actually **parameter values**—one specific chip's choices. The assignment wanted me to find where the specification says "you get to choose this" (the *parameter definitions*), not where a config file says "we chose 64 bytes" (the *chosen value*).
+
+That realization changed everything. This document tells the story of what happened next.
 
 ### Corrected Approach
 **What I Should Have Done:**

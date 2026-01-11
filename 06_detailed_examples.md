@@ -1,5 +1,7 @@
 # Detailed Parameter Extraction Examples
 
+> **Learning by Example:** Abstract methodology documents are helpful, but examples show how things actually work. This file walks through three real extractions step-by-step: a simple one (cache size), a dependency (misaligned loads), and a tricky one where one paragraph yielded two separate parameters. You can follow these examples to replicate the process yourself.
+
 ## Example 1: Cache Block Size (Specification Snippet)
 
 ### Source Text

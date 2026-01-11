@@ -1,5 +1,7 @@
 ## Critical Error Identified
 
+> **The Story:** Writing prompts for AI is like explaining a task to a very literal colleague who follows instructions exactly—but doesn't understand context. This document shows how I went from vague instructions ("find parameters") to precise ones ("extract phrases with 'implementation-specific' and cite the exact sentence"). Along the way, I learned to prevent the AI from inventing information by requiring it to quote sources.
+
 ### Issue: Wrong Source Files
 **Initial Approach:** Analyzed `cfgs/*.yaml` files
 **Problem:** These are OUTPUTS of the database, not specification INPUTS

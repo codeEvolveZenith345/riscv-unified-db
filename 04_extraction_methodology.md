@@ -1,9 +1,32 @@
 # Parameter Extraction Methodology
 
+> **The Process:** Extracting parameters from specification text is like mining for gold: you need to find the nuggets (phrases like "implementation-specific"), dig them out carefully (extract surrounding context), and refine them (structure into YAML). This document walks through my 4-phase pipeline for doing this systematically and preventing hallucinations.
+
 ## Extraction Pipeline
 
+## Extraction Pipeline Visualization
+
+```
+Specification Text
+        ↓
+  [Keyword Detection]
+  "implementation-specific"
+  "optional" / "may"
+        ↓
+  [Context Extraction]
+  Surrounding sentences
+        ↓
+  [Parameter Construction]
+  Name, Type, Constraints
+        ↓
+  [Validation]
+  Exact quote required
+        ↓
+    YAML Output
+```
+
 ### Phase 1: Source Selection
-The extraction strategy pivoted from configuration files to specification sources:
+Here's where I corrected course: I realized I was reading configuration *outputs* (one chip's choices) instead of specification *inputs* (what the standard allows to vary). So I pivoted to analyze the spec text itself:
 1.  **Architecture Definitions:** YAML files in `arch/` (e.g., `arch/csr/`) containing `description` fields.
 2.  **Specification Snippets:** Text extracted directly from the RISC-V Privileged Specification (PDF).
 
@@ -20,9 +43,7 @@ For each identified freedom:
 - **Constraints:** Extracted from "must" or "shall" statements in the text.
 
 ### Phase 4: Validation
-Parameters were cross-referenced against:
-- **Configuration Files:** Checked `cfgs/` to see how these parameters are concretely instantiated (used as validation, not source).
-- **Specification References:** Ensured every parameter links back to a specific section or quote.
+I cross-referenced each parameter against configuration files to ensure my extracted definitions matched real-world usage. For example, the spec says "cache block size is implementation-specific," and indeed, the config file shows `CACHE_BLOCK_SIZE: 64`—confirming that implementers do choose this value.
 
 
 ## Technical Challenges

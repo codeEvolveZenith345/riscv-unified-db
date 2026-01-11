@@ -1,5 +1,7 @@
 # Parameter Extraction Results Summary
 
+> **The Scorecard:** From the provided specification text, I extracted 12 architectural parameters—each representing a choice chip makers get to make. This document breaks down what I found: 5 are implementation-specific, 3 are conventions, 2 are optional, and so on. Think of it as the "executive summary" of results.
+
 ## Statistics
 
 ### Total Parameters Extracted: 12
