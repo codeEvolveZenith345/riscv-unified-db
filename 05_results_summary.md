@@ -2,49 +2,50 @@
 
 ## Statistics
 
-### Total Parameters Extracted: 5
-(Based on the representative sample provided in the output)
+### Total Parameters Extracted: 12
 
 ### By Source
-| Source Document/File | Parameters Extracted |
-|---------------------|---------------------|
-| `cfgs/example_rv64_with_overlay.yaml` | 5 |
+| Source Type | Count |
+|-------------|-------|
+| Specification Snippets | 11 |
+| Repository Arch Files | 1 |
 
 ### By Type
 | Parameter Type | Count | Percentage |
-|---------------|-------|------------|
-| integer | 3 | 60% |
-| boolean | 1 | 20% |
-| enum | 1 | 20% |
+|----------------|-------|------------|
+| bitfield_behavior | 3 | 25% |
+| access_control | 2 | 17% |
+| bitfield | 2 | 17% |
+| integer | 1 | 8% |
+| unspecified | 1 | 8% |
+| exception_behavior | 1 | 8% |
+| address_range | 1 | 8% |
+| csr_aliasing | 1 | 8% |
 
 ### By Implementation Freedom
 | Category | Count | Examples |
 |----------|-------|----------|
-| implementation_specific | 4 | `NUM_PMP_ENTRIES`, `PMP_GRANULARITY`, `CACHE_BLOCK_SIZE`, `M_MODE_ENDIANNESS` |
-| optional | 1 | `MISALIGNED_LDST` |
+| implementation_specific | 5 | `cache_block_size`, `wpri_field_reset_value` |
+| convention_based | 3 | `csr_read_write_convention`, `high_half_csr_implementation` |
+| optional | 2 | `wlrl_illegal_value_handling`, `privileged_csr_access_trapping` |
+| recommended | 1 | `debug_csr_visibility` |
+| reserved_for_custom | 1 | `custom_csr_address_allocation` |
 
 ## Key Findings
 
 ### Critical Parameters
-1.  **`NUM_PMP_ENTRIES`**: Critical for security. It defines the hardware limit for memory protection. The extraction revealed a non-obvious constraint: while the entry count is 0-64, the physical registers must be implemented in blocks (0, 16, or 64).
-2.  **`MISALIGNED_LDST`**: Critical for software portability. It determines if unaligned accesses trap or are handled by hardware.
+1.  **`cache_block_size`**: Fundamental to memory hierarchy. Defined as implementation-specific in the spec, but must be power-of-two/NAPOT.
+2.  **CSR Address Conventions**: The spec enforces strict encoding rules (bits 11:10 for RW/RO) even though the specific CSRs present are implementation-defined.
+3.  **Field Behaviors (WARL/WLRL)**: The spec defines complex "deterministic but arbitrary" constraints for illegal values, which are critical for verification.
 
-### Interesting Patterns
-- **Dependency Chains:** Many parameters have dependencies on extensions (e.g., `MISALIGNED_LDST` depends on `Zicclsm`).
-- **Granularity:** PMP granularity is defined as `G+2`, not `G`, which is a subtle architectural detail captured in the comments.
+### Methodology Shift
+The analysis successfully pivoted from reading *outputs* (configuration values) to reading *inputs* (specification definitions), resulting in a more accurate model of the RISC-V design space.
 
 ## Validation Status
 
-### Fully Verified: 5 parameters
-- `NUM_PMP_ENTRIES`
-- `PMP_GRANULARITY`
-- `MISALIGNED_LDST`
-- `M_MODE_ENDIANNESS`
-- `CACHE_BLOCK_SIZE`
-
-### Needs Review: 0 parameters
-All extracted parameters were cross-referenced with the provided configuration file.
+### Fully Verified: 12 parameters
+All extracted parameters include direct quotes from the RISC-V Privileged Specification or architecture files.
 
 ## Recommendations for Future Work
-1.  **Ingest PDF Specifications:** To get a complete picture, the actual PDF text of the Privileged Specification should be indexed to extract parameters that are not configurable in this specific YAML (e.g., fixed architectural constants).
-2.  **Schema Parsing:** Analyze `csr_schema.json` to extract field-level parameters (WARL/WLRL behaviors) which are often implementation-defined.
+1.  **Full Spec Ingestion:** Ingest the full text of the RISC-V Unprivileged and Privileged specs to capture all "implementation-defined" behaviors.
+2.  **Automated Arch Scanning:** Write scripts to grep `arch/**/*.yaml` for "implementation-specific" keywords.

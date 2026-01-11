@@ -7,24 +7,25 @@ This project documents the AI-assisted extraction of architectural parameters fr
 
 This submission consists of the following documents:
 
-1. **01_llm_configuration.md** - LLM setup and capabilities
-2. **02_prompt_engineering_journey.md** - Prompt development process
-3. **03_repository_analysis.md** - Repository structure analysis
-4. **04_extraction_methodology.md** - Technical extraction approach
-5. **05_results_summary.md** - Results and statistics
-6. **06_detailed_examples.md** - Worked examples
-7. **parameters.yaml** - Complete extracted parameters (YAML format)
+1. **00_correction_notice.md** - **READ FIRST:** Explanation of methodology correction.
+2. **01_llm_configuration.md** - LLM setup and capabilities.
+3. **02_prompt_engineering_journey.md** - Prompt development and error analysis.
+4. **03_repository_analysis.md** - Analysis of source files (`arch/` vs `cfgs/`).
+5. **04_extraction_methodology.md** - Revised technical extraction approach.
+6. **05_results_summary.md** - Results from the corrected analysis.
+7. **06_detailed_examples.md** - Worked examples from specifications.
+8. **parameters.yaml** - Complete extracted parameters (YAML format).
 
 ## Quick Start
 
-**To understand the process:** Read documents 1-4 in order.
-**To see results:** Jump to documents 5-6 and `parameters.yaml`.
-**To replicate:** Follow the methodology in document 4 using the `example_rv64_with_overlay.yaml` file.
+**To understand the correction:** Read `00_correction_notice.md` first
+**To see the process:** Follow documents 1-4 in order
+**To see results:** Jump to `parameters.yaml` and `05_results_summary.md`
+**To replicate:** Use the prompts in `02_prompt_engineering_journey.md`
 
 ## Key Findings
-- Extracted critical parameters regarding Memory Protection (PMP) and Endianness.
-- Identified complex constraints involving hardware register implementation vs. logical entry counts.
-- Validated parameters against source comments to ensure accuracy.
+ - **Methodology:** Configuration files (`cfgs/`) are outputs; Specification files (`arch/`) are inputs.
+ - **Parameters:** Extracted key constraints on Cache Block Size and CSR Address Conventions from specification text.
 
 ## Submission Checklist
 - [x] LLM details documented
@@ -32,3 +33,4 @@ This submission consists of the following documents:
 - [x] Results in YAML format
 - [x] Hallucination prevention demonstrated
 - [x] Validation methodology described
+- [x] Correction of initial approach documented

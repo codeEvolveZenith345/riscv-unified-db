@@ -2,60 +2,55 @@
 
 ## Extraction Pipeline
 
-### Phase 1: Text Parsing
-The extraction focused on the `params` dictionary within `cfgs/example_rv64_with_overlay.yaml`. The file was parsed as a YAML structure, but comment lines (starting with `#`) associated with each key were treated as the "specification text."
+### Phase 1: Source Selection
+The extraction strategy pivoted from configuration files to specification sources:
+1.  **Architecture Definitions:** YAML files in `arch/` (e.g., `arch/csr/`) containing `description` fields.
+2.  **Specification Snippets:** Text extracted directly from the RISC-V Privileged Specification (PDF).
 
 ### Phase 2: Keyword Detection
-I scanned the comments for specific keywords indicating constraints:
-- "range" / "between" -> Integer Range
-- "one of" / "either" -> Enumeration
-- "depends on" / "when" -> Dependency
+I scanned the `description` fields for keywords indicating implementation freedom:
+- "implementation-specific" / "implementation-defined"
+- "optional" / "optionally"
+- "may" / "should"
 
-### Phase 3: Context Analysis
-For each identified parameter, I analyzed the comment block to determine:
-- **Description:** The general purpose text.
-- **Constraints:** Specific rules (e.g., "must be 0, 16, or 64").
-- **Type:** Inferred from the value in the YAML (e.g., `true` -> boolean, `14` -> integer).
+### Phase 3: Parameter Construction
+For each identified freedom:
+- **Name:** Derived from the subject (e.g., "cache_block_size").
+- **Type:** Inferred from context (integer, bitfield, etc.).
+- **Constraints:** Extracted from "must" or "shall" statements in the text.
 
-### Phase 4: Structured Data Generation
-Data was mapped to the required YAML schema:
-```yaml
-name: [Key from YAML]
-description: [Extracted from comment]
-type: [Inferred from value]
-constraints: [Parsed from "must be" or "can be" text]
-specification_reference: [File path + exact comment text]
-```
+### Phase 4: Validation
+Parameters were cross-referenced against:
+- **Configuration Files:** Checked `cfgs/` to see how these parameters are concretely instantiated (used as validation, not source).
+- **Specification References:** Ensured every parameter links back to a specific section or quote.
 
-### Phase 5: Validation
-I verified that every extracted constraint had a corresponding phrase in the `exact_quote` field.
 
 ## Technical Challenges
 
-### Challenge 1: Implicit Discovery Mechanisms
-- **Problem:** The configuration file defines *values* but rarely explains *how* software discovers them (the "Discoverability" field).
-- **Solution:** I used domain knowledge of the RISC-V architecture (e.g., knowing that PMP size is discovered by writing to CSRs) to populate the `discoverability` field, while keeping the `constraints` strictly grounded in the text.
+### Challenge 1: Unstructured Prose
+- **Problem:** Specification text is unstructured natural language.
+- **Solution:** Manual review of "implementation-specific" instances to map them to structured YAML fields.
 
 ## Parameter Classification System
+
+### New Types Discovered in Spec Text
+During specification analysis, I identified parameter types not present in config files:
+- **exception_behavior**: Whether implementations raise exceptions (optional choices)
+- **access_control**: Privilege-level access rules and trapping behavior
+- **csr_aliasing**: Aliasing mechanisms like high-half CSRs
+
+These types represent **architectural design choices** rather than just numeric values.
 
 ### Types Identified
 | Type | Description | Example |
 |------|-------------|---------|
-| **integer** | Numeric values | `NUM_PMP_ENTRIES` (14) |
-| **boolean** | True/False flags | `MISALIGNED_LDST` (true) |
-| **enum** | One of a set of strings | `M_MODE_ENDIANNESS` (little) |
-| **list** | Array of values | `SXLEN` ([64]) |
+| **integer** | Numeric values | `cache_block_size` |
+| **bitfield** | Encoded bits | `csr_read_write_convention` |
+| **unspecified** | Abstract concepts | `cache_organization` |
 
-### Constraint Types
-| Constraint Type | Meaning | Example |
-|----------------|---------|---------|
-| **range** | Numeric bounds | "between 0-64" |
-| **hardware_dependency** | specific allowed discrete values | "must be 0, 16, or 64" |
-| **dependency** | Conditional requirement | "must be true when Zicclsm is supported" |
 
 ## Quality Assurance Process
 
 ### Validation Checks Applied
-- [x] **Quote Verification:** Checked that `exact_quote` matches the comment in the source file.
-- [x] **Type Consistency:** Ensured the `type` field matches the YAML value type.
-- [x] **Constraint Logic:** Verified that "0-64" was recorded as a range, not an enum.
+- [x] **Quote Verification:** Checked that `exact_quote` matches the provided snippets.
+- [x] **Source Tracing:** Ensured `source` field correctly identifies "specification_snippet" vs "repository_arch_files".

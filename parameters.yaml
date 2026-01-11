@@ -1,188 +1,223 @@
+# parameters.yaml - CORRECTED VERSION
+
+metadata:
+  extraction_date: "2026-01-11"
+  sources:
+    - type: "repository_files"
+      location: "riscv-unified-db/arch/**/*.yaml"
+      parameters_extracted: ["cache_organization"]
+    - type: "specification_snippets" 
+      location: "Assignment-provided text snippets"
+      parameters_extracted: ["cache_block_size", "csr_read_write_convention", "csr_privilege_level_convention", "wpri_field_reset_value", "wlrl_illegal_value_handling", "wlrl_read_after_illegal_write", "warl_read_after_illegal_write", "custom_csr_address_allocation", "debug_csr_visibility", "privileged_csr_access_trapping", "high_half_csr_implementation"]
+    - type: "configuration_reference"
+      location: "riscv-unified-db/cfgs/example_rv64_with_overlay.yaml"
+      note: "Referenced for validation, not primary extraction source"
+
 parameters:
-  - name: "NUM_PMP_ENTRIES"
+  # From Specification Snippet 1 (Privileged Spec 19.3.1)
+  - name: "cache_block_size"
+    source: "specification_snippet"
     description: |
-      Defines the number of implemented Physical Memory Protection (PMP) entries.
-      This parameter controls the hardware resources available for memory protection.
-      The number of implemented PMP registers (pmpaddrN and pmpcfgN) is derived
-      from this value.
-    
+      Size of a cache block representing a contiguous, naturally aligned 
+      power-of-two (or NAPOT) range of memory locations.
     type: "integer"
-    
-    constraints:
-      - type: "range"
-        value: "0-64"
-        description: "Can be any value between 0 and 64, inclusive."
-      - type: "hardware_dependency"
-        value: "0, 16, 64"
-        description: |
-          The number of implemented PMP registers must be 0, 16, or 64.
-          If NUM_PMP_ENTRIES is not exactly 0, 16, or 64, some extant pmp registers
-          will be read-only zero.
-    
-    default_value: null
-    
-    scope: "system"
-    
-    implementation_freedom: "implementation_specific"
-    
-    discoverability:
-      method: "csr_detection"
-      mechanism: "Software can detect implemented PMP entries by writing to pmpaddr CSRs and reading back the value."
-    
-    specification_reference:
-      document: "riscv-unified-db/cfgs/example_rv64_with_overlay.yaml"
-      section: "params"
-      exact_quote: |
-        "number of implemented PMP entries. Can be any value between 0-64, inclusive.
-        the number of implemented PMP registers must be 0, 16, or 64."
-    
-    notes: |
-      The configuration file notes that pmpcfgN for an odd N never exist when XLEN == 64.
-    
-    validation_status: "verified"
-
-  - name: "PMP_GRANULARITY"
-    description: |
-      Log2 of the smallest supported PMP region size. This defines the minimum
-      alignment and size for PMP regions.
-    
-    type: "integer"
-    
-    constraints:
-      - type: "recommendation"
-        value: ">= 12"
-        description: |
-          For systems with an MMU, should not be smaller than 12 to allow caching
-          PMP results in the TLB.
-      - type: "formula"
-        value: "G+2"
-        description: "PMP_GRANULARITY is equal to G+2 as described in the privileged architecture."
-    
-    default_value: null
-    
-    scope: "system"
-    
-    implementation_freedom: "implementation_specific"
-    
-    discoverability:
-      method: "csr_detection"
-      mechanism: "Software can discover granularity by writing all ones to a pmpaddr register and observing the alignment of the result."
-    
-    specification_reference:
-      document: "riscv-unified-db/cfgs/example_rv64_with_overlay.yaml"
-      section: "params"
-      exact_quote: |
-        "log2 of the smallest supported PMP region. generally, for systems with an MMU,
-        should not be smaller than 12... Note that PMP_GRANULARITY is equal to G+2"
-    
-    notes: |
-      This parameter directly impacts the granularity of memory protection and
-      interaction with virtual memory systems.
-    
-    validation_status: "verified"
-
-  - name: "MISALIGNED_LDST"
-    description: |
-      Indicates whether the implementation supports misaligned loads and stores
-      in main memory (excluding atomics).
-    
-    type: "boolean"
-    
-    constraints:
-      - type: "dependency"
-        value: "Zicclsm"
-        description: "Must be true when the Zicclsm extension is supported."
-    
-    default_value: null
-    
-    scope: "system"
-    
-    implementation_freedom: "optional"
-    
-    discoverability:
-      method: "execution_test"
-      mechanism: "Software can attempt a misaligned load/store and check for a trap."
-    
-    specification_reference:
-      document: "riscv-unified-db/cfgs/example_rv64_with_overlay.yaml"
-      section: "params"
-      exact_quote: |
-        "whether or not the implementation supports misaligned loads and stores in main memory
-        (not including atomics). must be true when Zicclsm is supported"
-    
-    notes: |
-      This parameter distinguishes between hardware that handles misalignment
-      transparently and hardware that traps to software.
-    
-    validation_status: "verified"
-
-  - name: "M_MODE_ENDIANNESS"
-    description: |
-      Defines the endianness of data access in Machine (M) mode.
-    
-    type: "enum"
-    
-    constraints:
-      - type: "enumeration"
-        value: "little, big, dynamic"
-        description: |
-          'little': Always little endian.
-          'big': Always big endian.
-          'dynamic': Dependent on mstatus.MBE.
-    
-    default_value: null
-    
-    scope: "privilege_level"
-    
-    implementation_freedom: "implementation_specific"
-    
-    discoverability:
-      method: "csr_read"
-      mechanism: "Check mstatus.MBE if dynamic, or rely on fixed platform specification."
-    
-    specification_reference:
-      document: "riscv-unified-db/cfgs/example_rv64_with_overlay.yaml"
-      section: "params"
-      exact_quote: |
-        "Endianness of data in M-mode. Can be one of:
-         * little:  M-mode data is always little endian
-         * big:     M-mode data is always big endian
-         * dynamic: M-mode data can be either little or big endian, depending on the RW CSR field mstatus.MBE"
-    
-    notes: |
-      Similar parameters exist for S-mode (S_MODE_ENDIANNESS), U-mode (U_MODE_ENDIANNESS),
-      and VS-mode (VS_MODE_ENDIANNESS).
-    
-    validation_status: "verified"
-
-  - name: "CACHE_BLOCK_SIZE"
-    description: |
-      The size of a cache block in bytes.
-    
-    type: "integer"
-    
     constraints:
       - type: "alignment"
-        value: "power_of_two"
-        description: "Implied by standard cache architecture definitions."
-    
-    default_value: null
-    
-    scope: "system"
-    
+        value: "power_of_two_or_napot"
+        description: "Must be power-of-two or NAPOT aligned"
+      - type: "uniformity"
+        value: "system_wide"
+        description: "Shall be uniform throughout the system (CMO extensions)"
     implementation_freedom: "implementation_specific"
-    
-    discoverability:
-      method: "execution_environment_interface"
-      mechanism: "CMO extensions or other discovery mechanisms."
-    
     specification_reference:
-      document: "riscv-unified-db/cfgs/example_rv64_with_overlay.yaml"
-      section: "params"
+      document: "RISC-V Privileged Specification"
+      section: "19.3.1"
       exact_quote: |
-        "size of a cache block, in bytes"
-    
-    notes: |
-      Matches the "SNIPPET 1" example provided in the prompt context.
-    
-    validation_status: "verified"
+        "The capacity and organization of a cache and the size of a cache 
+        block are both implementation-specific"
+
+  # From Specification Snippet 2 (Privileged Spec 2.1)
+  - name: "csr_read_write_convention"
+    source: "specification_snippet"
+    description: "Convention for encoding read/write access in CSR address bits [11:10]"
+    type: "bitfield"
+    constraints:
+      - type: "encoding"
+        value: "00,01,10=RW; 11=RO"
+    implementation_freedom: "convention_based"
+    specification_reference:
+      document: "RISC-V Privileged Specification"
+      section: "2.1"
+      exact_quote: "The top two bits (csr[11:10]) indicate whether the 
+                    register is read/write (00,01, or 10) or read-only (11)"
+
+  - name: "csr_privilege_level_convention"
+    source: "specification_snippet"
+    description: "Convention for encoding minimum privilege level in CSR address bits [9:8]"
+    type: "bitfield"
+    constraints:
+      - type: "encoding"
+        value: "00=User; 01=Supervisor; 10=Hypervisor; 11=Machine"
+    implementation_freedom: "convention_based"
+    specification_reference:
+      document: "RISC-V Privileged Specification"
+      section: "2.1"
+      exact_quote: "The next two bits (csr[9:8]) encode the lowest 
+                    privilege level that can access the CSR"
+
+  # From Repository arch/ files (Example from prompt)
+  - name: "cache_organization"
+    source: "repository_arch_files"
+    type: "unspecified"
+    implementation_freedom: "implementation_specific"
+    specification_reference:
+      file: "arch/csr/Zicbom/cbo.yaml"
+      exact_quote: "capacity and organization of a cache...implementation-specific"
+
+  # From Specification Section 2.3 (CSR Field Specifications)
+  - name: "wpri_field_reset_value"
+    source: "specification_snippet"
+    description: |
+      For WPRI (Write Preserve, Read Ignore) fields, implementations that 
+      do not furnish these fields must make them read-only zero.
+    type: "bitfield_behavior"
+    implementation_freedom: "implementation_specific"
+    specification_reference:
+      document: "RISC-V Privileged Specification"
+      section: "2.3.1"
+      exact_quote: |
+        "For forward compatibility, implementations that do not furnish 
+        these fields must make them read-only zero."
+
+  - name: "wlrl_illegal_value_handling"
+    source: "specification_snippet"
+    description: |
+      WLRL fields may or may not raise illegal-instruction exceptions when 
+      written with non-supported values.
+    type: "exception_behavior"
+    implementation_freedom: "optional"
+    specification_reference:
+      document: "RISC-V Privileged Specification"
+      section: "2.3.2"
+      exact_quote: |
+        "Implementations are permitted but not required to raise an 
+        illegal-instruction exception if an instruction attempts to write 
+        a non-supported value to a WLRL field."
+
+  - name: "wlrl_read_after_illegal_write"
+    source: "specification_snippet"
+    description: |
+      Return value when reading a WLRL field after an illegal write.
+    type: "bitfield_behavior"
+    implementation_freedom: "implementation_specific"
+    constraints:
+      - type: "determinism"
+        value: "deterministic_but_arbitrary"
+        description: "Must be deterministic based on illegal write and prior value"
+    specification_reference:
+      document: "RISC-V Privileged Specification"
+      section: "2.3.2"
+      exact_quote: |
+        "Implementations can return arbitrary bit patterns on the read of a 
+        WLRL field when the last write was of an illegal value, but the value 
+        returned should deterministically depend on the illegal written value 
+        and the value of the field prior to the write."
+
+  - name: "warl_read_after_illegal_write"
+    source: "specification_snippet"
+    description: |
+      Legal value selection when reading a WARL field after an illegal write.
+    type: "bitfield_behavior"
+    implementation_freedom: "implementation_specific"
+    constraints:
+      - type: "determinism"
+        value: "deterministic_legal_value"
+        description: "Must return legal value deterministically based on write"
+    specification_reference:
+      document: "RISC-V Privileged Specification"
+      section: "2.3.3"
+      exact_quote: |
+        "Implementations can return any legal value on the read of a WARL field 
+        when the last write was of an illegal value, but the legal value returned 
+        should deterministically depend on the illegal written value and the 
+        architectural state of the hart."
+
+  # From Specification Section 2.1 (CSR Address Allocation)
+  - name: "custom_csr_address_allocation"
+    source: "specification_snippet"
+    description: |
+      Addresses designated for custom CSRs that will not be redefined by 
+      future standard extensions.
+    type: "address_range"
+    implementation_freedom: "reserved_for_custom"
+    constraints:
+      - type: "preservation_guarantee"
+        value: "permanent"
+        description: "Will not be redefined by future standard extensions"
+    specification_reference:
+      document: "RISC-V Privileged Specification"
+      section: "2.1"
+      exact_quote: |
+        "The CSR addresses designated for custom uses will not be redefined 
+        by future standard extensions."
+
+  - name: "debug_csr_visibility"
+    source: "specification_snippet"
+    description: |
+      Visibility of debug CSRs 0x7B0-0x7BF to different privilege modes.
+    type: "access_control"
+    implementation_freedom: "recommended"
+    constraints:
+      - type: "exception_behavior"
+        value: "should_raise_illegal_instruction"
+        description: "Should raise illegal-instruction on M-mode access to 0x7B0-0x7BF"
+    specification_reference:
+      document: "RISC-V Privileged Specification"
+      section: "2.1"
+      exact_quote: |
+        "Implementations should raise illegal-instruction exceptions on 
+        machine-mode access to the latter set of registers [0x7B0-0x7BF]."
+
+  - name: "privileged_csr_access_trapping"
+    source: "specification_snippet"
+    description: |
+      Ability for more-privileged levels to trap otherwise permitted CSR 
+      accesses by less-privileged levels.
+    type: "access_control"
+    implementation_freedom: "optional"
+    constraints:
+      - type: "transparency"
+        value: "transparent_to_lower_privilege"
+        description: "Must be transparent to less-privileged software"
+    specification_reference:
+      document: "RISC-V Privileged Specification"
+      section: "2.1"
+      exact_quote: |
+        "Implementations might allow a more-privileged level to trap otherwise 
+        permitted CSR accesses by a less-privileged level to allow these accesses 
+        to be intercepted. This change should be transparent to the less-privileged 
+        software."
+
+  # From Specification Section 2.7 (High-Half CSRs)
+  - name: "high_half_csr_implementation"
+    source: "specification_snippet"
+    description: |
+      For 64-bit CSRs in RV32, a corresponding 32-bit high-half CSR is usually 
+      defined with 'h' suffix.
+    type: "csr_aliasing"
+    implementation_freedom: "convention_based"
+    constraints:
+      - type: "accessibility"
+        value: "rv32_only"
+        description: "Accessible only when XLEN=32"
+      - type: "rv64_behavior"
+        value: "reserved_raise_exception"
+        description: "For RV64, addresses are reserved; access typically raises exception"
+    specification_reference:
+      document: "RISC-V Privileged Specification"
+      section: "2.7"
+      exact_quote: |
+        "Standard high-half CSRs are accessible only when the base RISC-V 
+        instruction set is RV32 (XLEN=32). For RV64 (when XLEN=64), the addresses 
+        of all standard high-half CSRs are reserved, so an attempt to access a 
+        high-half CSR typically raises an illegal-instruction exception."
